@@ -31,7 +31,9 @@ begin
     -- If reset, then... reset!
     if i_rst = '1' then
       current_state <= INIT;
-    elsif i_clk'event and i_clk = '1' then
+    elsif i_clk'event and i_clk = '0' then
+      -- the FSM (*and ONLY the FSM*) updates its state on the falling edge of the
+      -- clock, allowing all signals to settle between clock pulses
       case current_state is
         when INIT =>
           if i_start = '1' then
