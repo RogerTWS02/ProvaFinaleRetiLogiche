@@ -22,7 +22,7 @@ entity fsm is
   );
 end fsm;
 architecture fsm_arch of fsm is
-  type STATE is (INIT, READ_MEM, ZERO_VALUE, NON_ZERO_VALUE, SET_CREDIBILITY, DONE);
+  type STATE is (INIT, MEM_READY, ZERO_VALUE, NON_ZERO_VALUE, SET_CREDIBILITY, READ_MEM, DONE);
   signal current_state : STATE;
 begin
 
@@ -31,15 +31,15 @@ begin
     -- If reset, then... reset!
     if i_rst = '1' then
       current_state <= INIT;
-    elsif i_clk'event and i_clk = '0' then
+    elsif i_clk'event and i_clk = '1' then
       -- the FSM (*and ONLY the FSM*) updates its state on the falling edge of the
       -- clock, allowing all signals to settle between clock pulses
       case current_state is
         when INIT =>
           if i_start = '1' then
-            current_state <= READ_MEM;
+            current_state <= MEM_READY;
           end if;
-        when READ_MEM =>
+        when MEM_READY =>
           if i_mem_data = "00000000" then
             current_state <= ZERO_VALUE;
           else
@@ -55,6 +55,8 @@ begin
           else
             current_state <= READ_MEM;
           end if;
+        when READ_MEM =>
+          current_state <= MEM_READY;
         when DONE =>
           if i_start = '0' then
             current_state <= INIT;
@@ -73,10 +75,10 @@ begin
     o_mem_we <= '0';
     o_done <= '0';
 
-    -- the INIT and READ_MEM states do not set any flags
+    -- the INIT and MEM_READY states do not set any flags
     case current_state is
       when INIT =>
-      when READ_MEM =>
+      when MEM_READY =>
       when ZERO_VALUE =>
         o_mux_select <= '0'; -- select the register, technically not needed but for clarity
         o_counter_increment <= '1'; -- go to the next mem address
@@ -88,8 +90,9 @@ begin
       when SET_CREDIBILITY =>
         o_mux_select <= '1'; -- select the reverse counter
         o_counter_increment <= '1'; -- go to the next mem address
-        o_rev_count_decrement <= '1'; -- decrement the reverse counter
         o_mem_we <= '1'; -- write the reverse counter value into the memory address
+      when READ_MEM =>
+        o_rev_count_decrement <= '1'; -- decrement the reverse counter
       when DONE =>
         o_done <= '1'; -- done!
     end case;

@@ -1,8 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.std_logic_unsigned.all;
-
-
 -- The 5 bit reverse_counter for the credibility bit
 -- gets resetted to 31, decrements by 1 if enabled
 entity reverse_counter is
@@ -20,13 +18,15 @@ begin
   -- The output is the stored value
   o_data <= stored_value;
 
-  process (i_clk, i_rst)
+  process (i_clk, i_rst, stored_value, i_count_enable)
   begin
     -- If reset, then... reset!
     if i_rst = '1' then
       stored_value <= (others => '1');
-    elsif i_clk'event and i_clk = '1' and i_count_enable = '1' and not (stored_value = "00000") then
-      stored_value <= stored_value - 1;
+    elsif i_clk'event and i_clk = '1' then
+      if i_count_enable = '1' and not (stored_value = "00000") then
+        stored_value <= stored_value - 1;
+      end if;
     end if;
   end process;
 end reverse_counter_arch;
