@@ -19,7 +19,7 @@ begin
   -- A is an input from register_8bit and B is an input from reverse_counter
   process (i_select, i_data_A, i_data_B)
   begin
-    if i_select = '1' then
+    if i_select = '1' and not (i_data_A = "00000000") then
       o_data <= "000" & i_data_B;
     else
       o_data <= i_data_A;
